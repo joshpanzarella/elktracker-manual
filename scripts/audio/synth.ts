@@ -491,6 +491,14 @@ export function renderSceneAudio(scene: Scene, sampleRate = 48000): RenderedAudi
     renderRange(pos, end);
   }
 
+  // The scene's fade-out, in step with the picture's.
+  const fadeSamples = Math.round((scene.timeline.fadeOut / fps) * sampleRate);
+  for (let i = Math.max(0, n - fadeSamples); i < n; i++) {
+    const g = (n - i) / fadeSamples;
+    L[i] *= g;
+    R[i] *= g;
+  }
+
   // Master limiter: soft knee above 0.7 so stacked voices never clip.
   for (const buf of [L, R]) {
     for (let i = 0; i < n; i++) {

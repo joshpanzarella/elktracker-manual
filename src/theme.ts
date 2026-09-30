@@ -203,8 +203,10 @@ export const theme = {
       color: '#e0a868',
       lineWidth: 3,
       padPx: 6, // around the target, in stage px
+      /** Labels stay below this (px from the panel top) to clear the caption. */
+      zoneTop: 400,
       labelSize: 30,
-      textSize: 22,
+      textSize: 24,
       labelColor: '#19191f',
       textColor: '#ecebf2',
       drawFrames: 12,

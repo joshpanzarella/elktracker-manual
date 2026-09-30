@@ -115,6 +115,9 @@ export interface StartState {
 export interface Timeline {
   fps: number;
   durationInFrames: number;
+  /** Frames to fade in from black at the start / out at the end (picture and sound). */
+  fadeIn: number;
+  fadeOut: number;
   start: StartState;
   events: TimelineEvent[]; // sorted by frame, then file order
 }
@@ -122,6 +125,8 @@ export interface Timeline {
 export interface TimelineJson {
   fps: number;
   durationInFrames: number;
+  fadeIn?: number;
+  fadeOut?: number;
   start?: {
     view?: string;
     chain?: CellRef;
@@ -247,7 +252,9 @@ export function parseTimeline(json: TimelineJson): Timeline {
     }
   });
   events.sort((a, b) => a.frame - b.frame || a.seq - b.seq);
-  return { fps, durationInFrames, start, events };
+  const fadeIn = json.fadeIn === undefined ? 0 : num(json.fadeIn, 'timeline fadeIn');
+  const fadeOut = json.fadeOut === undefined ? 0 : num(json.fadeOut, 'timeline fadeOut');
+  return { fps, durationInFrames, fadeIn, fadeOut, start, events };
 }
 
 export const isDeviceEvent = (e: TimelineEvent): e is DeviceEvent =>

@@ -3,7 +3,7 @@
 // pure function of the frame and the scene's data.
 
 import React, { useMemo } from 'react';
-import { AbsoluteFill, Html5Audio, getInputProps, getRemotionEnvironment, getStaticFiles, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
+import { AbsoluteFill, Html5Audio, getInputProps, getRemotionEnvironment, getStaticFiles, interpolate, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import { playbackAt } from '../engine/playback';
 import { SceneData, loadScene } from '../engine/scene';
 import { CalloutEvent, CameraEvent, CaptionEvent, PressEvent } from '../engine/timeline';
@@ -30,6 +30,13 @@ const SceneAudio: React.FC<{ file: string }> = ({ file }) => {
     );
   }
   return <Html5Audio src={staticFile(file)} />;
+};
+
+const Fade: React.FC<{ frame: number; fadeIn: number; fadeOut: number; end: number }> = ({ frame, fadeIn, fadeOut, end }) => {
+  const a = fadeIn > 0 ? interpolate(frame, [0, fadeIn], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }) : 0;
+  const b = fadeOut > 0 ? interpolate(frame, [end - fadeOut, end - 1], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }) : 0;
+  const opacity = Math.max(a, b);
+  return opacity > 0 ? <AbsoluteFill style={{ background: 'black', opacity }} /> : null;
 };
 
 export const TrackerScene: React.FC<{ data: SceneData; chapter: string }> = ({ data, chapter }) => {
@@ -74,6 +81,7 @@ export const TrackerScene: React.FC<{ data: SceneData; chapter: string }> = ({ d
       <Captions captions={parts.captions} frame={frame} end={durationInFrames} theme={theme} />
       <ButtonHud presses={parts.presses} frame={frame} theme={theme} />
       <Callouts callouts={parts.callouts} frame={frame} fps={fps} camera={camera} theme={theme} />
+      <Fade frame={frame} fadeIn={scene.timeline.fadeIn} fadeOut={scene.timeline.fadeOut} end={durationInFrames} />
       <SceneAudio file={scene.audioFile} />
     </AbsoluteFill>
   );

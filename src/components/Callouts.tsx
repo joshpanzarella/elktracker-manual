@@ -41,9 +41,9 @@ export const Callouts: React.FC<{
   }
   // Stack labels top to bottom so they never overlap.
   active.sort((a, b) => a.labelY - b.labelY);
-  let floor = P.y;
+  let floor = P.y + K.zoneTop;
   for (const a of active) {
-    a.labelY = Math.max(floor, Math.min(a.labelY, P.y + P.h - a.labelH));
+    a.labelY = Math.max(floor, Math.min(a.labelY, P.y + t.stage.hud.y - 24 - a.labelH));
     floor = a.labelY + a.labelH + 16;
   }
 

@@ -85,6 +85,7 @@ export function loadScene(data: SceneData, ctx: Omit<EditorContext, 'fps'>): Sce
     song: data.song,
     fps: timeline.fps,
     duration: timeline.durationInFrames,
+    fadeOut: timeline.fadeOut,
     start: timeline.start,
     events: audible,
   }));

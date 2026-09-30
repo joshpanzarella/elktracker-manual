@@ -1,6 +1,8 @@
 {
   "fps": 30,
   "durationInFrames": 900,
+  "fadeIn": 8,
+  "fadeOut": 20,
   "start": { "view": "PHRASE", "chain": "00", "phrase": "00", "cursor": { "row": 0, "col": "NOT" } },
   "events": [
     { "frame": 0, "caption": "A **phrase** is one channel's part: 16 steps, played top to bottom.", "title": "The Phrase screen", "until": 72 },
