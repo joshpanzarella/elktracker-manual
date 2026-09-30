@@ -1,0 +1,23 @@
+{
+  "fps": 30,
+  "durationInFrames": 240,
+  "start": { "view": "SONG", "chain": "00", "phrase": "00" },
+  "events": [
+    { "frame": 0, "caption": "Every screen built so far, on the phrase-basics song. Scrub here while tweaking theme.ts.", "title": "Screens" },
+    { "frame": 0, "set": { "phrase": "00", "step": "00" }, "value": "C-4 00 ARP 37 --- --" },
+    { "frame": 0, "set": { "phrase": "00", "step": "04" }, "value": "D#4 00" },
+    { "frame": 0, "set": { "phrase": "00", "step": "08" }, "value": "G-4 00" },
+    { "frame": 0, "set": { "phrase": "00", "step": "0C" }, "value": "G-3 00" },
+    { "frame": 2, "press": "START" },
+    { "frame": 0, "callout": "song.grid", "label": "SONG", "until": 58 },
+    { "frame": 60, "view": "CHAIN", "chain": "00" },
+    { "frame": 60, "cursor": { "row": 2, "col": "TRANSPOSE" } },
+    { "frame": 60, "callout": "chain.slots", "label": "CHAIN", "until": 118 },
+    { "frame": 120, "view": "PHRASE", "phrase": "01" },
+    { "frame": 120, "cursor": { "row": 4, "col": "IN" } },
+    { "frame": 120, "callout": "phrase.steps", "label": "PHRASE", "until": 178 },
+    { "frame": 180, "view": "PHRASE", "phrase": "02" },
+    { "frame": 180, "cursor": { "row": 0, "col": "FX2" } },
+    { "frame": 180, "callout": "status.bar", "label": "STATUS BAR", "until": 238 }
+  ]
+}

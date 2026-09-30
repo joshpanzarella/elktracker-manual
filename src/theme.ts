@@ -169,8 +169,8 @@ export const theme = {
       firstChannelCol: 5,
       channelPitch: 3, // cells from one channel column to the next
       rowEnd: 27,
-      table: { col: 29, row: 3, labels: ['CH', 'IN', 'NOTE'] }, // live readout, one row per channel
-      scopes: { col: 29, row: 13, cols: 3, rows: 3, cellCols: 3, cellRows: 4 }, // 3x3 grid
+      table: { col: 30, row: 3, labels: ['CH', 'IN', 'NOTE'] }, // live readout, one row per channel
+      scopes: { col: 30, row: 13, cols: 3, rows: 3, cellCols: 3, cellRows: 4 }, // 3x3 grid
     },
     placeholder: {
       title: { col: 1, row: 1 },
