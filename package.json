@@ -1,0 +1,28 @@
+{
+  "name": "elktracker-manual",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Animated visual manual for ElkTracker: the tracker UI recreated in Remotion and driven by song + timeline data.",
+  "scripts": {
+    "dev": "tsx scripts/dev.ts",
+    "studio": "remotion studio",
+    "audio": "tsx scripts/render-audio.ts",
+    "audio:watch": "tsx scripts/render-audio.ts --watch",
+    "render": "remotion render",
+    "check-sync": "tsx scripts/check-sync.ts",
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.531",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "remotion": "4.0.531"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "5.9.3"
+  }
+}

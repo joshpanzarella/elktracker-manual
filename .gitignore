@@ -1,0 +1,8 @@
+node_modules/
+out/
+# Rendered output. Audio is regenerated from src/data by `npm run audio`
+# (and automatically before every `remotion studio` / `remotion render`).
+public/audio/*.wav
+public/audio/*.json
+*.mp4
+.DS_Store
