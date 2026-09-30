@@ -4,13 +4,21 @@
 // nothing carries over from one frame to the next.
 
 import React, { useLayoutEffect, useRef } from 'react';
+import { Img } from 'remotion';
 import { CellGrid } from '../screen/grid';
 import { paintScreen } from '../screen/paint';
 import { Theme } from '../theme';
 import { Camera } from './camera';
 import { useFontsReady } from './fonts';
 
-export const TrackerScreen: React.FC<{ grid: CellGrid; camera: Camera; theme: Theme }> = ({ grid, camera, theme: t }) => {
+/** An image laid exactly over the screen (a device photo, for calibration). */
+export interface ScreenOverlay {
+  src: string;
+  opacity: number;
+  blend?: 'normal' | 'difference';
+}
+
+export const TrackerScreen: React.FC<{ grid: CellGrid; camera: Camera; theme: Theme; overlay?: ScreenOverlay }> = ({ grid, camera, theme: t, overlay }) => {
   const canvas = useRef<HTMLCanvasElement>(null);
   const scratch = useRef<HTMLCanvasElement | null>(null);
   const ready = useFontsReady();
@@ -53,6 +61,20 @@ export const TrackerScreen: React.FC<{ grid: CellGrid; camera: Camera; theme: Th
             imageRendering: 'pixelated',
           }}
         />
+        {overlay && overlay.opacity > 0 && (
+          <Img
+            src={overlay.src}
+            style={{
+              position: 'absolute',
+              left: vw / 2 - camera.cx * s,
+              top: vh / 2 - camera.cy * s,
+              width: t.screen.width * s,
+              height: t.screen.height * s,
+              opacity: overlay.opacity,
+              mixBlendMode: overlay.blend ?? 'normal',
+            }}
+          />
+        )}
       </div>
     </div>
   );

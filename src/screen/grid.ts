@@ -10,9 +10,13 @@ export interface Cell {
 
 export type Prim =
   | { kind: 'rect'; x: number; y: number; w: number; h: number; color: string }
-  | { kind: 'frame'; x: number; y: number; w: number; h: number; color: string }
-  | { kind: 'sprite'; rows: readonly string[]; x: number; y: number; color: string }
-  | { kind: 'line'; points: Array<[number, number]>; color: string };
+  /** Outline `t` px thick (default 1). */
+  | { kind: 'frame'; x: number; y: number; w: number; h: number; color: string; t?: number }
+  /** '#' pixels draw in `color`; other letters use `palette`. */
+  | { kind: 'sprite'; rows: readonly string[]; x: number; y: number; color: string; palette?: Record<string, string> }
+  | { kind: 'line'; points: Array<[number, number]>; color: string }
+  /** Text at a pixel position, off the cell grid. (x, y) = the cell's top-left. */
+  | { kind: 'text'; x: number; y: number; text: string; color: string };
 
 export class CellGrid {
   readonly cells: Cell[];

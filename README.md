@@ -21,8 +21,9 @@ npm run check-sync       # listens to the WAV and checks it against the picture
   skipped). `npm run audio` does it by hand; `npm run audio:watch` keeps doing it.
 - **No Chrome download?** (containers, CI) Point Remotion at a local one:
   `REMOTION_BROWSER_EXECUTABLE=/path/to/chrome npx remotion render`.
-- Studio shows two folders: **Chapters** (the manual) and **Tools**
-  (`ScreenGallery`: every built screen, for tweaking the theme by eye). Tools
+- Studio shows two folders: **Chapters** (the manual) and **Tools**:
+  `ScreenGallery` (every built screen) and `ReferenceSong` (the recreation
+  with a photo of the device faded over it; see `docs/reference.md`). Tools
   exist only in Studio, so with one chapter `npx remotion render` needs no
   picker; once there are more, name one: `npx remotion render PhraseBasics`.
 
@@ -94,6 +95,7 @@ src/
     sequencer.ts      playback schedule
     playback.ts       what is playing at a frame (playhead, flashes)
     scene.ts          song + timeline -> cached lookups, audio key
+  font/elk5x7.ts      the device's 5 x 7 font, one '#' per pixel
   screen/             pure: views build a character grid; paint draws it on a canvas
     views.ts          Phrase, Chain, Song, status bar
     anchors.ts        named regions (phrase.col.NOT ...) for callouts and the camera
@@ -103,7 +105,9 @@ src/
 scripts/
   render-audio.ts     WAV per scene (placeholder synth in scripts/audio/)
   check-sync.ts       audio-vs-picture measurement
+  reference/          straighten a phone photo of the screen to 640 x 480
 docs/screens.md       screens and columns to build, in ElkTracker's terms
+docs/reference.md     what the device photos measured, and how to add one
 ```
 
 ## song.json
@@ -168,28 +172,33 @@ out, START plays the song, SELECT+START loops the current phrase or chain.
 
 Everything is in `src/theme.ts`; components hardcode nothing.
 
-- `grid`: columns, rows, cell size in device px.
-- `font`: family and file, size, horizontal stretch, offsets, and `binarize`
-  (snaps anti-aliased edges to hard pixels).
-- `colors`: one palette, roles named by use (`cursorBg`, `beatStripe`, `flash` ...).
-- `sprites`: pixel icons as `#` strings (play, stop, loop, marker, battery).
-- `cursor.style`, `playhead`, `flash`: how those behave.
-- `views.phrase / chain / song`: where every field sits, in cells.
-- `statusBar`: what sits where on the bottom row.
+- `grid`: 52 x 20 cells of 12 x 24 px from (8, 4), measured on the device.
+- `font`: `kind: 'bitmap'` draws the device's 5 x 7 font from
+  `src/font/elk5x7.ts`, one `#` per pixel, so any glyph can be fixed by
+  editing its rows; `kind: 'ttf'` switches back to VT323.
+- `colors`: one palette, roles named by use (`band`, `line`, `cursor` ...).
+- `sprites`: pixel icons as strings (stop, play, loop, marker, battery).
+- `cursor`, `playhead`, `flash`, `stripe`: how those look.
+- `views.song / phrase / chain`: where every field sits, in cells, or in px
+  where the device puts things off the grid.
+- `statusBar`: the bottom band, in px.
 - `stage`: the 1920 x 1080 frame around the screen: margins, captions,
   callouts, HUD, camera padding, fonts.
 
-Open `Tools/ScreenGallery` in Studio to see every screen at once.
+Open `Tools/ScreenGallery` to see every screen at once, and
+`Tools/ReferenceSong` to check the Song screen against the device photo.
 
 ## Placeholders and guesses
 
-These are marked in the code and listed in `docs/screens.md`, with the
-questions that would settle them:
+Marked in the code and listed in `docs/screens.md` with the questions that
+would settle them:
 
-- **Layouts**: every screen position is a guess from the manual's text.
-- **Font**: VT323. The manual's credits name a public-domain bitmap font by
-  Daniel Hepper, most likely `font8x8`, which at 2x fills this 16 x 16 cell.
-- **Colours**: sampled from the device mockup on elktracker.io.
+- **Measured from a photo** (`docs/reference.md`): the grid, the font, the
+  Song screen, the status bar, the cursor, the colours.
+- **Guessed**: the Phrase and Chain layouts; anything that only shows while
+  playing (play dots, the playhead, note flashes, scope waveforms).
+- **Font**: 36 characters read off the device; the rest drawn to match.
+- **Colours**: the photo's hues, brightness corrected by eye.
 - **Sound**: simple synth voices; drum pads are synthesized (`synth:kick` ...).
 - **Unconfirmed behaviour**: FX command cycle order, what a fresh FX gets as
   its parameter, the double-tap window, hint wording, how a chain with an

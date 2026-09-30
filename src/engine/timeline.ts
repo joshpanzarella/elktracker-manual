@@ -30,9 +30,11 @@ const BUTTON_ALIASES: Record<string, Button> = {
   L1: 'L', R1: 'R', SEL: 'SELECT', '↑': 'UP', '↓': 'DOWN', '←': 'LEFT', '→': 'RIGHT',
 };
 
-/** A place on the screen: a named anchor, cells, or device pixels. */
+/** A place on the screen: a named anchor, a list of anchors (the box around
+ *  them all), cells, or device pixels. */
 export type TargetSpec =
   | string
+  | string[]
   | { col: number; row: number; w?: number; h?: number }
   | { x: number; y: number; w: number; h: number };
 
@@ -186,7 +188,8 @@ export function parseTimeline(json: TimelineJson): Timeline {
     phrase: s.phrase === undefined ? 0 : parseIndex(s.phrase, 'start.phrase'),
     instrument: s.instrument === undefined ? 0 : parseIndex(s.instrument, 'start.instrument'),
     songRow: s.songRow === undefined ? 0 : parseIndex(s.songRow, 'start.songRow'),
-    songChannel: s.songChannel === undefined ? 0 : s.songChannel,
+    // Channels are numbered 1..8, as the Song screen shows them (C1..C8).
+    songChannel: s.songChannel === undefined ? 0 : s.songChannel - 1,
     cursor: s.cursor,
   };
 

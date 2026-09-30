@@ -33,7 +33,17 @@ export const Callouts: React.FC<{
     const stop = e.until ?? e.frame + 2 * fps;
     if (frame < e.frame || frame >= stop) continue;
     const r = rectToStage(resolveTarget(e.target, t), camera, t);
-    const box = { x: r.x - K.padPx, y: r.y - K.padPx, w: r.w + 2 * K.padPx, h: r.h + 2 * K.padPx };
+    // Keep the bracket on the screen when the camera has zoomed past the target.
+    const vx0 = t.stage.screenX - K.padPx / 2;
+    const vy0 = t.stage.screenY - K.padPx / 2;
+    const vx1 = t.stage.screenX + t.screen.width * t.screen.scale + K.padPx / 2;
+    const vy1 = t.stage.screenY + t.screen.height * t.screen.scale + K.padPx / 2;
+    const x0 = Math.max(vx0, r.x - K.padPx);
+    const y0 = Math.max(vy0, r.y - K.padPx);
+    const x1 = Math.min(vx1, r.x + r.w + K.padPx);
+    const y1 = Math.min(vy1, r.y + r.h + K.padPx);
+    if (x1 <= x0 || y1 <= y0) continue; // the target is off screen
+    const box = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
     const progress = interpolate(frame, [e.frame, e.frame + K.drawFrames], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
     const opacity = interpolate(frame, [stop - K.fadeFrames, stop], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
     const labelH = K.labelSize * 1.5 + (e.text ? K.textSize * 1.35 * Math.ceil(e.text.length / 34) + 8 : 0);

@@ -31,24 +31,24 @@ Settings.
 
 ## Main screens
 
-### 1 · SONG ✅
-- **Grid:** rows `00`-`7F` (gutter), channels `1`-`8`; cells: chain `00`-`7F`,
-  `EN` (END), empty `--`. Beat stripe every 4th row.
+### 1 · SONG ✅ measured from a photo
+- **Grid:** rows `00`-`7F` (gutter), channel headings `C1`-`C8`; cells:
+  chain `00`-`7F`, `EN` (END), empty `--`. Beat stripe every 4th row.
 - **Play position:** a dot left of each channel's current cell (they scatter:
-  channels advance independently).
-- **Header:** project name top-left, accent dot when unsaved; the label of the
-  chain under the cursor top-right.
-- **Right panel:** live `CH / IN / NOTE` table (8 rows, brightness follows
-  level); 3x3 scope grid (channels 1-8 + master `M`). Scopes are empty boxes
-  for now.
+  channels advance independently). Not seen yet: guessed.
+- **Header:** project name top-left, yellow; accent dot when unsaved and the
+  label of the chain under the cursor top-right (not seen yet: guessed).
+- **Right panel:** a divider, the `CH IN NOTE` table (8 rows), a separator,
+  and a 3x3 grid of scope boxes `1`-`8` and `M`, each split by a line.
+  Exact positions: `docs/reference.md`.
 
-### 2 · CHAIN ✅
+### 2 · CHAIN ✅ guessed layout, in the Song screen's style
 - **Slots** `0`-`F`: phrase `00`-`FE`, transpose -48..+48 (A+LEFT/RIGHT 1,
   A+UP/DOWN 12). Plays until its first empty slot.
 - **Name row** above slot 0 (8 chars), shown next to the title; label of the
   phrase under the cursor top-right. Beat stripes.
 
-### 3 · PHRASE ✅
+### 3 · PHRASE ✅ guessed layout, in the Song screen's style
 - **Steps** `00`-`0F`: `NOT` (note / `OFF` / `---`), `IN` (instrument or
   empty), `FX1` `P1`, `FX2` `P2`.
 - **LEN** header above step 00 (1-16; steps past LEN keep their content but the
@@ -105,8 +105,9 @@ Settings.
 - Dialogs: `OVERWRITE?`, the duplicate picker (SELECT+R2), the button-mapping wizard.
 
 ## On every screen
-- **Status bar** ✅: screen name, BPM, ▶ / ■ with `C` / `P` / ↺ for
-  isolation, context hint, battery icon.
+- **Status bar** ✅ measured: a band at the bottom with the screen name,
+  `BPM:120`, the transport square (▶ / ■, with `C` / `P` / ↺ for isolation:
+  guessed), the context hint (position guessed) and the battery icon.
 - **Toasts** ✅: `SAVED`, `UNDO`, `SLICE ADDED`... in a box near the bottom
   right, for about 3 s.
 
@@ -126,20 +127,23 @@ Settings.
 
 ## Questions only the device can answer
 
-The fastest answer to most of these: **a photo or screenshot of the Phrase,
-Chain and Song screens** (with something playing).
+Answered by the Song screen photo: the grid, the font, the cursor, the
+colours of one theme, the status bar, and the Song screen itself.
 
-1. **Grid**: how many characters fit across, and how many text rows? (Built:
-   40 x 30 cells of 16 x 16 px, which is the 8x8 bitmap font at 2x.)
-2. **Phrase screen**: where do the title, name and LEN sit? Are there column
-   headings over the steps? What fills the right side of the screen?
-3. **Playhead**: a tinted row, a marker in the gutter, both, or something else?
-   Does a note flash when it plays?
-4. **Cursor**: a filled cell, a box, or an underline?
-5. **Chain transpose**: shown as hex (`05`, `F4`) or signed (`+05`, `-12`)?
-6. **Song screen**: how many rows are visible, and how the right panel is laid out.
-7. **Status bar**: the order and spacing of its parts.
-8. **Colours**: which theme you use (NEON is the default); hex values or a photo.
-9. **FX columns**: the order A+LEFT/RIGHT cycles commands in; what A+UP/DOWN
+Still open (a photo answers most of them):
+
+1. **Phrase screen**: where are the title, name and LEN? Column headings?
+   What fills the right side? A photo would settle all of it.
+2. **Chain screen**: the same, plus: is transpose shown as hex (`05`, `F4`)
+   or signed (`+05`, `-12`)?
+3. **While playing**: how the playhead looks on Phrase and Chain, whether a
+   note flashes, the Song screen's play dots, what the scopes and the table
+   show. A photo mid-playback would do.
+4. **Which theme** is on in the photo? (NEON is the default; the photo is
+   dark blue with yellow.)
+5. **Status bar with a long screen name**: does `BPM:` move for
+   `INSTRUMENT`, or is the name shortened?
+6. **FX columns**: the order A+LEFT/RIGHT cycles commands in; what A+UP/DOWN
    does there; what parameter a newly inserted command gets.
-10. **Hint text**: the exact words for FX names (built: `ARPEGGIO`, `RETRIGGER` ...).
+7. **Hint text**: the exact words for FX names (built: `ARPEGGIO` ...), and
+   where the hint sits.

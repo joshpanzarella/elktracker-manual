@@ -1,5 +1,6 @@
 // The screens, as pure functions: (editor state, playback, frame, theme) ->
-// a cell grid. Layout comes from theme.views; nothing here knows a position.
+// a cell grid plus pixel primitives. Layout comes from theme.ts; nothing here
+// knows a position.
 
 import { CHAIN_ROW_NAME, EditorState, PHRASE_COLS, PHRASE_ROW_LEN, PHRASE_ROW_NAME } from '../engine/editor';
 import { FX_NAMES } from '../engine/fx';
@@ -19,38 +20,66 @@ export interface ScreenModel {
   savedSong: Song;
 }
 
-const px = (t: Theme, col: number) => t.grid.originX + col * t.grid.cellW;
-const py = (t: Theme, row: number) => t.grid.originY + row * t.grid.cellH;
+const colX = (t: Theme, col: number) => t.grid.originX + col * t.grid.cellW;
+const rowY = (t: Theme, row: number) => t.grid.originY + row * t.grid.cellH;
 
-/** Place a sprite centred in a cell. */
-function spriteInCell(g: CellGrid, t: Theme, rows: readonly string[], col: number, row: number, color: string, layer: 'under' | 'over' = 'over') {
-  const w = rows[0].length;
-  const h = rows.length;
-  g[layer].push({
-    kind: 'sprite', rows, color,
-    x: Math.round(px(t, col) + (t.grid.cellW - w) / 2),
-    y: Math.round(py(t, row) + (t.grid.cellH - h) / 2),
-  });
+/** Place a sprite centred in a cell (or in the given px box). */
+function spriteAt(g: CellGrid, rows: readonly string[], x: number, y: number, color: string, palette?: Record<string, string>) {
+  g.over.push({ kind: 'sprite', rows, x: Math.round(x), y: Math.round(y), color, palette });
+}
+
+function spriteInCell(g: CellGrid, t: Theme, rows: readonly string[], col: number, row: number, color: string) {
+  spriteAt(g, rows, colX(t, col) + (t.grid.cellW - rows[0].length) / 2, rowY(t, row) + (t.grid.cellH - rows.length) / 2, color);
 }
 
 function flashLevel(m: ScreenModel, f0: number): number {
-  const age = m.frame - f0;
-  return Math.max(0, 1 - age / m.theme.flash.frames);
+  return Math.max(0, 1 - (m.frame - f0) / m.theme.flash.frames);
 }
 
-function cursorCell(g: CellGrid, t: Theme, col: number, row: number, w: number) {
-  const c = t.colors;
-  switch (t.cursor.style) {
-    case 'fill':
-      g.recolor(col, row, w, c.cursorText, c.cursorBg);
-      break;
+/** The cursor around `w` characters starting at (col, row). */
+function cursorAt(g: CellGrid, t: Theme, col: number, row: number, w: number) {
+  const C = t.cursor;
+  const x = colX(t, col);
+  const y = rowY(t, row);
+  switch (C.style) {
     case 'box':
-      g.over.push({ kind: 'frame', x: px(t, col) - 1, y: py(t, row) - 1, w: w * t.grid.cellW + 2, h: t.grid.cellH + 2, color: c.cursorBg });
+      g.over.push({
+        kind: 'frame', color: t.colors.cursor, t: C.thickness,
+        x: x - C.padX, y: y + C.insetY, w: w * t.grid.cellW + 2 * C.padX, h: t.grid.cellH - 2 * C.insetY,
+      });
+      break;
+    case 'fill':
+      g.under.push({ kind: 'rect', color: t.colors.cursor, x: x - C.padX, y: y + C.insetY, w: w * t.grid.cellW + 2 * C.padX, h: t.grid.cellH - 2 * C.insetY });
+      g.recolor(col, row, w, t.colors.bg);
       break;
     case 'underline':
-      g.over.push({ kind: 'rect', x: px(t, col), y: py(t, row) + t.grid.cellH - 2, w: w * t.grid.cellW, h: 2, color: c.cursorBg });
+      g.over.push({ kind: 'rect', color: t.colors.cursor, x, y: y + t.grid.cellH - C.insetY - C.thickness, w: w * t.grid.cellW, h: C.thickness });
       break;
   }
+}
+
+/** Beat stripe: a band behind the whole row, every 4th row. */
+function stripe(g: CellGrid, t: Theme, row: number) {
+  g.under.push({ kind: 'rect', color: t.colors.band, x: t.stripe.x0, y: rowY(t, row), w: t.stripe.x1 - t.stripe.x0, h: t.grid.cellH });
+}
+
+/** The playing row: a band like the beat stripe (guessed), plus a marker. */
+function playheadRow(g: CellGrid, t: Theme, row: number) {
+  if (t.playhead.tintRow) {
+    g.under.push({ kind: 'rect', color: t.colors.playheadBg, x: t.stripe.x0, y: rowY(t, row), w: t.stripe.x1 - t.stripe.x0, h: t.grid.cellH });
+  }
+  if (t.playhead.marker) {
+    const m = t.sprites.marker;
+    spriteAt(g, m, (t.grid.originX - m[0].length) / 2, rowY(t, row) + (t.grid.cellH - m.length) / 2, t.colors.playheadMarker);
+  }
+}
+
+function noteFlash(g: CellGrid, m: ScreenModel, col: number, row: number, w: number, f0: number) {
+  const t = m.theme;
+  const k = flashLevel(m, f0);
+  if (k <= 0) return;
+  g.under.push({ kind: 'rect', color: mix(t.colors.flash, t.colors.bg, k), x: colX(t, col) - 2, y: rowY(t, row) + 2, w: w * t.grid.cellW + 2, h: t.grid.cellH - 4 });
+  if (k > 0.5) g.recolor(col, row, w, t.colors.bg);
 }
 
 // ---------------------------------------------------------------- phrase
@@ -77,53 +106,40 @@ function phraseView(g: CellGrid, m: ScreenModel) {
   const cur = s.phraseCursor;
 
   g.text(L.title.col, L.title.row, 'PHRASE', c.accent);
-  g.text(L.title.col + 7, L.title.row, hex2(s.phrase), c.text);
+  g.text(L.title.col + 7, L.title.row, hex2(s.phrase), c.accent);
   g.text(L.nameCol, L.title.row, phrase.name.padEnd(8, ' '), c.text);
-  if (cur.row === PHRASE_ROW_NAME) cursorCell(g, t, L.nameCol, L.title.row, 8);
+  if (cur.row === PHRASE_ROW_NAME) cursorAt(g, t, L.nameCol, L.title.row, 8);
 
   if (cur.row >= 0 && cur.col === 1) {
-    const instr = phraseOf(s.song, s.phrase).steps[cur.row].instr;
+    const instr = phrase.steps[cur.row].instr;
     const ins = instr === null ? undefined : s.song.instruments[instr];
     if (ins?.name) g.textRight(L.topRight.col, L.topRight.row, ins.name, c.text);
   }
 
   g.text(L.len.col, L.len.row, 'LEN', c.dim);
   g.text(L.len.col + 4, L.len.row, hex2(phrase.len), c.text);
-  if (cur.row === PHRASE_ROW_LEN) cursorCell(g, t, L.len.col + 4, L.len.row, 2);
+  if (cur.row === PHRASE_ROW_LEN) cursorAt(g, t, L.len.col + 4, L.len.row, 2);
 
   const cols = PHRASE_COLS.map((name) => L.columns[name]);
-  if (L.headings.show) {
-    PHRASE_COLS.forEach((name, i) => g.text(cols[i].col, L.headings.row, L.headings.labels[name], c.dim));
-  }
+  if (L.headings.show) PHRASE_COLS.forEach((name, i) => g.text(cols[i].col, L.headings.row, L.headings.labels[name], c.dim));
 
-  const rowStart = L.gutter.col;
-  const rowW = L.rowEnd - rowStart + 1;
   const playing = m.play.channels.filter((ch) => ch.row && ch.row.phrase === s.phrase);
-
   for (let i = 0; i < PHRASE_STEPS; i++) {
     const row = L.firstRow + i;
-    if (i % 4 === 0) g.fill(rowStart, row, rowW, 1, c.beatStripe);
-    const isPlaying = playing.some((ch) => ch.row!.step === i);
-    if (isPlaying && t.playhead.tintRow) g.fill(rowStart, row, rowW, 1, c.playheadBg);
-    if (isPlaying && t.playhead.marker) spriteInCell(g, t, t.sprites.marker, rowStart - 1, row, c.playheadMarker);
-
+    if (i % 4 === 0) stripe(g, t, row);
+    if (playing.some((ch) => ch.row!.step === i)) playheadRow(g, t, row);
     g.text(L.gutter.col, row, hex2(i), i < phrase.len ? c.dim : c.faint);
-    stepCells(phrase.steps[i]).forEach((text, k) => {
-      g.text(cols[k].col, row, text, EMPTY.has(text) ? c.dim : c.text);
-    });
+    stepCells(phrase.steps[i]).forEach((text, k) => g.text(cols[k].col, row, text, EMPTY.has(text) ? c.dim : c.text));
   }
 
   for (const r of m.play.flashes) {
     if (r.phrase !== s.phrase) continue;
     const row = L.firstRow + r.step;
-    const k = flashLevel(m, r.f0);
-    const under = g.cell(cols[0].col, row)?.bg ?? c.bg;
-    if (t.flash.target === 'row') g.fill(rowStart, row, rowW, 1, mix(c.flash, under, k));
-    else g.fill(cols[0].col, row, cols[0].w, 1, mix(c.flash, under, k));
-    if (k > 0.5) g.recolor(cols[0].col, row, cols[0].w, c.bg);
+    if (t.flash.target === 'row') noteFlash(g, m, cols[0].col, row, cols[5].col + cols[5].w - cols[0].col, r.f0);
+    else noteFlash(g, m, cols[0].col, row, cols[0].w, r.f0);
   }
 
-  if (cur.row >= 0) cursorCell(g, t, cols[cur.col].col, L.firstRow + cur.row, cols[cur.col].w);
+  if (cur.row >= 0) cursorAt(g, t, cols[cur.col].col, L.firstRow + cur.row, cols[cur.col].w);
 }
 
 // ---------------------------------------------------------------- chain
@@ -142,9 +158,9 @@ function chainView(g: CellGrid, m: ScreenModel) {
   const cur = s.chainCursor;
 
   g.text(L.title.col, L.title.row, 'CHAIN', c.accent);
-  g.text(L.title.col + 6, L.title.row, hex2(s.chain), c.text);
+  g.text(L.title.col + 6, L.title.row, hex2(s.chain), c.accent);
   g.text(L.nameCol, L.title.row, chain.name.padEnd(8, ' '), c.text);
-  if (cur.row === CHAIN_ROW_NAME) cursorCell(g, t, L.nameCol, L.title.row, 8);
+  if (cur.row === CHAIN_ROW_NAME) cursorAt(g, t, L.nameCol, L.title.row, 8);
 
   if (cur.row >= 0) {
     const p = chain.slots[cur.row].phrase;
@@ -157,16 +173,12 @@ function chainView(g: CellGrid, m: ScreenModel) {
     g.text(cols[0].col, L.headings.row, L.headings.labels.PHRASE, c.dim);
     g.text(cols[1].col, L.headings.row, L.headings.labels.TRANSPOSE, c.dim);
   }
-  const rowStart = L.gutter.col;
-  const rowW = L.rowEnd - rowStart + 1;
   const playing = m.play.channels.filter((ch) => ch.row && ch.row.chain === s.chain);
 
   chain.slots.forEach((slot, i) => {
     const row = L.firstRow + i;
-    if (i % 4 === 0) g.fill(rowStart, row, rowW, 1, c.beatStripe);
-    const isPlaying = playing.some((ch) => ch.row!.slot === i);
-    if (isPlaying && t.playhead.tintRow) g.fill(rowStart, row, rowW, 1, c.playheadBg);
-    if (isPlaying && t.playhead.marker) spriteInCell(g, t, t.sprites.marker, rowStart - 1, row, c.playheadMarker);
+    if (i % 4 === 0) stripe(g, t, row);
+    if (playing.some((ch) => ch.row!.slot === i)) playheadRow(g, t, row);
     g.text(L.gutter.col, row, hex1(i), c.dim);
     if (slot.phrase === null) {
       g.text(cols[0].col, row, '--', c.dim);
@@ -179,12 +191,10 @@ function chainView(g: CellGrid, m: ScreenModel) {
 
   for (const r of m.play.flashes) {
     if (r.chain !== s.chain || r.slot === null) continue;
-    const row = L.firstRow + r.slot;
-    const under = g.cell(cols[0].col, row)?.bg ?? c.bg;
-    g.fill(cols[0].col, row, cols[0].w, 1, mix(c.flash, under, flashLevel(m, r.f0) * 0.6));
+    noteFlash(g, m, cols[0].col, L.firstRow + r.slot, cols[0].w, r.f0);
   }
 
-  if (cur.row >= 0) cursorCell(g, t, cols[cur.col].col, L.firstRow + cur.row, cols[cur.col].w);
+  if (cur.row >= 0) cursorAt(g, t, cols[cur.col].col, L.firstRow + cur.row, cols[cur.col].w);
 }
 
 // ---------------------------------------------------------------- song
@@ -206,54 +216,73 @@ function songView(g: CellGrid, m: ScreenModel) {
   }
 
   const chCol = (ch: number) => L.firstChannelCol + ch * L.channelPitch;
-  if (L.headings.show) for (let ch = 0; ch < CHANNELS; ch++) g.text(chCol(ch), L.headings.row, String(ch + 1).padStart(2, ' '), c.dim);
+  if (L.headings.show) for (let ch = 0; ch < CHANNELS; ch++) g.text(chCol(ch), L.headings.row, `${L.headings.prefix}${ch + 1}`, c.dim);
 
-  const rowStart = L.gutter.col;
-  const rowW = chCol(CHANNELS - 1) + 2 - rowStart;
   for (let i = 0; i < L.visibleRows; i++) {
     const r = cur.top + i;
     if (r >= s.song.rows.length) break;
     const row = L.firstRow + i;
-    if (r % 4 === 0) g.fill(rowStart, row, rowW, 1, c.beatStripe);
+    if (r % 4 === 0) stripe(g, t, row);
     g.text(L.gutter.col, row, hex2(r), c.dim);
     for (let ch = 0; ch < CHANNELS; ch++) {
       const cell = s.song.rows[r][ch];
       const text = cell === null ? '--' : cell === 'END' ? 'EN' : hex2(cell);
       g.text(chCol(ch), row, text, cell === null ? c.dim : c.text);
       const now = m.play.channels[ch].row;
-      if (now && now.songRow === r) spriteInCell(g, t, t.sprites.dot, chCol(ch) - 1, row, c.playDot);
+      if (now && now.songRow === r) {
+        const d = t.sprites.dot;
+        spriteAt(g, d, colX(t, chCol(ch)) - t.grid.cellW / 2 - d[0].length / 2, rowY(t, row) + t.font.bitmap.offsetY + 7 - d.length / 2, c.playDot);
+      }
     }
   }
-  if (cur.row >= cur.top && cur.row < cur.top + L.visibleRows) {
-    cursorCell(g, t, chCol(cur.col), L.firstRow + cur.row - cur.top, 2);
-  }
+  if (cur.row >= cur.top && cur.row < cur.top + L.visibleRows) cursorAt(g, t, chCol(cur.col), L.firstRow + cur.row - cur.top, 2);
 
-  // Live CH / IN / NOTE readout; brightness fades with time since the note.
+  // Divider between the grid and the right panel.
+  const D = L.divider;
+  g.under.push({ kind: 'rect', color: c.line, x: D.x, y: D.y0, w: D.w, h: D.y1 - D.y0 });
+
+  // Live CH / IN / NOTE readout, in px columns (right-aligned on the device).
   const tb = L.table;
-  g.text(tb.col, tb.row, tb.labels[0], c.dim);
-  g.text(tb.col + 3, tb.row, tb.labels[1], c.dim);
-  g.text(tb.col + 6, tb.row, tb.labels[2], c.dim);
+  const tx = (k: number, row: number, text: string, color: string) => g.over.push({ kind: 'text', x: tb.x[k], y: rowY(t, row), text, color });
+  tb.labels.forEach((label, k) => tx(k, tb.headerRow, label, c.dim));
   for (let ch = 0; ch < CHANNELS; ch++) {
-    const row = tb.row + 1 + ch;
-    const last = m.play.channels[ch].lastNote;
+    const row = tb.firstRow + ch;
+    const last = m.play.playing ? m.play.channels[ch].lastNote : null;
     const age = last ? (m.frame - last.f0) / m.fps : Infinity;
-    const level = Math.max(0, 1 - age / 1.5);
-    const fg = mix(c.text, c.dim, level);
-    g.text(tb.col, row, String(ch + 1).padStart(2, ' '), c.dim);
-    g.text(tb.col + 3, row, last?.instr != null ? hex2(last.instr) : '--', last ? fg : c.dim);
-    g.text(tb.col + 6, row, last && typeof last.note === 'number' ? noteName(last.note) : '---', last ? fg : c.dim);
-    if (level > 0) g.fill(tb.col, row, 9, 1, mix(c.playheadBg, c.bg, level));
+    const fg = mix(c.text, c.dim, Math.max(0, 1 - age / 1.5));
+    tx(0, row, String(ch + 1), c.dim);
+    tx(1, row, last?.instr != null ? hex2(last.instr) : '--', last ? fg : c.dim);
+    tx(2, row, last && typeof last.note === 'number' ? noteName(last.note) : '---', last ? fg : c.dim);
   }
 
-  // 3 x 3 scope grid (channels 1-8 and master): boxes until audio feeds them.
+  // Separator, then the 3 x 3 scope grid (channels 1-8 and the master, M).
+  const sp = L.separator;
+  g.under.push({ kind: 'rect', color: c.line, x: sp.x0, y: sp.y, w: sp.x1 - sp.x0, h: sp.h });
   const sc = L.scopes;
   for (let i = 0; i < sc.cols * sc.rows; i++) {
-    const x = px(t, sc.col + (i % sc.cols) * sc.cellCols);
-    const y = py(t, sc.row + Math.floor(i / sc.cols) * sc.cellRows);
-    const w = sc.cellCols * t.grid.cellW - 4;
-    const h = sc.cellRows * t.grid.cellH - 4;
-    g.under.push({ kind: 'rect', x, y, w, h, color: c.scopeBox });
-    g.over.push({ kind: 'line', points: [[x + 2, y + h / 2], [x + w - 2, y + h / 2]], color: c.scope });
+    const x = sc.x + (i % sc.cols) * (sc.w + sc.gap);
+    const y = sc.y + Math.floor(i / sc.cols) * (sc.h + sc.gap);
+    g.over.push({ kind: 'frame', color: c.line, x, y, w: sc.w, h: sc.h, t: sc.border });
+    g.over.push({ kind: 'rect', color: c.line, x, y: y + sc.split, w: sc.w, h: sc.border });
+    g.over.push({ kind: 'text', x: x + sc.label.dx - t.font.bitmap.offsetX, y: y + sc.label.dy - t.font.bitmap.offsetY, text: sc.labels[i], color: c.dim });
+    // Waveform while a channel sounds (placeholder shape: a decaying wave).
+    const chans = i < CHANNELS ? [i] : Array.from({ length: CHANNELS }, (_, k) => k);
+    const amp = m.play.playing
+      ? Math.min(1, chans.reduce((a, k) => {
+          const last = m.play.channels[k].lastNote;
+          return a + (last ? Math.max(0, 1 - (m.frame - last.f0) / m.fps / 0.6) : 0);
+        }, 0))
+      : 0;
+    if (amp > 0) {
+      const top = y + sc.border + 4;
+      const h = sc.split - sc.border - 8;
+      const pts: Array<[number, number]> = [];
+      for (let px = x + sc.border + 2; px <= x + sc.w - sc.border - 3; px += 2) {
+        const ph = (px - x) / 7 + m.frame * 0.9 + i;
+        pts.push([px, top + h / 2 + Math.sin(ph) * (h / 2) * amp]);
+      }
+      g.over.push({ kind: 'line', points: pts, color: c.scope });
+    }
   }
 }
 
@@ -284,22 +313,34 @@ function statusBar(g: CellGrid, m: ScreenModel) {
   const t = m.theme;
   const c = t.colors;
   const S = t.statusBar;
-  g.fill(0, S.row, t.grid.cols, 1, c.statusBg);
-  g.text(S.screenName, S.row, m.state.view, c.statusText);
-  g.text(S.bpm, S.row, String(Math.round(m.play.bpm)).padStart(3, ' '), c.statusText);
-  spriteInCell(g, t, m.play.playing ? t.sprites.play : t.sprites.stop, S.transport, S.row, m.play.playing ? c.accent : c.statusText);
+  const W = t.grid.cellW;
+  const textY = S.textY - t.font.bitmap.offsetY;
+  const text = (x: number, s: string, color: string) => g.over.push({ kind: 'text', x, y: textY, text: s, color });
+
+  g.under.push({ kind: 'rect', color: c.band, x: 0, y: S.bandY, w: t.screen.width, h: S.bandH });
+  text(S.screenName.x, m.state.view, c.statusText);
+  const bpm = `${S.bpm.label}${Math.round(m.play.bpm)}`;
+  // BPM sits at its measured x unless a long screen name needs the room.
+  const bpmX = Math.max(S.bpm.x, S.screenName.x + (m.state.view.length + 1) * W);
+  text(bpmX, bpm, c.statusText);
+  const iconX = bpmX + bpm.length * W + S.transport.gap;
+  spriteAt(g, m.play.playing ? t.sprites.play : t.sprites.stop, iconX, S.transport.y, c.statusText);
   if (m.play.playing) {
-    if (m.play.mode === 'CHAIN') g.text(S.transport + 1, S.row, 'C', c.accent);
-    if (m.play.mode === 'PHRASE') g.text(S.transport + 1, S.row, 'P', c.accent);
-    if (m.play.mode === 'ROW') spriteInCell(g, t, t.sprites.loop, S.transport + 1, S.row, c.accent);
+    const lx = iconX + t.sprites.stop[0].length + 4;
+    if (m.play.mode === 'CHAIN') text(lx, 'C', c.statusText);
+    if (m.play.mode === 'PHRASE') text(lx, 'P', c.statusText);
+    if (m.play.mode === 'ROW') spriteAt(g, t.sprites.loop, lx, S.transport.y, c.statusText);
   }
-  g.text(S.hint, S.row, hintText(m).slice(0, S.hintWidth), c.statusText);
-  spriteInCell(g, t, t.sprites.battery, S.battery, S.row, c.statusText);
+  const hint = hintText(m).slice(0, S.hint.maxChars);
+  if (hint) text(S.hint.x, hint, c.dim);
+  spriteAt(g, t.sprites.battery, S.battery.x, S.battery.y, c.line, { o: c.line, f: c.batteryFill, g: c.batteryFill2, e: c.batteryEmpty });
 
   const msg = m.state.message;
   if (msg && m.frame - msg.frame < S.toastSeconds * m.fps) {
-    const text = ` ${msg.text} `;
-    g.text(S.toastRight - text.length + 1, S.toastRow, text, c.toastText, c.toastBg);
+    const w = (msg.text.length + 2) * W;
+    const x = S.toast.right - w;
+    g.over.push({ kind: 'rect', color: c.toastBg, x, y: S.toast.y, w, h: t.grid.cellH });
+    g.over.push({ kind: 'text', x: x + W, y: S.toast.y, text: msg.text, color: c.toastText });
   }
 }
 

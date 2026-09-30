@@ -21,7 +21,7 @@
     { "frame": 224, "press": "A" },
     { "frame": 234, "press": "A+DOWN" },
 
-    { "frame": 255, "camera": "phrase.grid", "ease": 24 },
+    { "frame": 255, "camera": ["phrase.headings", "phrase.row.07"], "ease": 24 },
     { "frame": 258, "caption": "Rows 00 to 0F are the steps. Every fourth row is shaded: one beat.", "title": "Columns", "until": 432 },
     { "frame": 282, "callout": "phrase.col.NOT", "label": "NOT", "text": "The note. OFF releases it; --- is empty.", "until": 324 },
     { "frame": 318, "callout": "phrase.col.IN", "label": "IN", "text": "Instrument, 00 to 3F.", "until": 360 },
@@ -31,7 +31,7 @@
     { "frame": 435, "caption": "Tap [A] in FX1 to add an effect, then hold [A] and press [LEFT] to pick the command.", "title": "Add an effect", "until": 556 },
     { "frame": 440, "press": "UP", "repeat": 12, "every": 2 },
     { "frame": 468, "press": "RIGHT", "repeat": 2, "every": 4 },
-    { "frame": 476, "camera": { "col": 3, "row": 5, "w": 15, "h": 6 }, "ease": 18 },
+    { "frame": 476, "camera": ["phrase.headings", "phrase.cell.04.P1"], "ease": 18 },
     { "frame": 482, "press": "A" },
     { "frame": 490, "press": "A+LEFT", "repeat": 8, "every": 3 },
     { "frame": 518, "press": "RIGHT" },

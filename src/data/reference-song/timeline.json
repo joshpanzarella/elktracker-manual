@@ -1,0 +1,9 @@
+{
+  "fps": 30,
+  "durationInFrames": 180,
+  "start": { "view": "SONG", "songRow": "00", "songChannel": 1 },
+  "events": [
+    { "frame": 0, "title": "Reference · Song screen", "caption": "Your photo of the device, corrected for the camera angle, fades in over the recreation and back out as you scrub.", "until": 120 },
+    { "frame": 120, "title": "Difference", "caption": "Where the two match, the screen goes black. Anything bright is off: tune **src/theme.ts** until it fades." }
+  ]
+}

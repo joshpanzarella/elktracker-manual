@@ -14,7 +14,7 @@ import { ButtonHud } from './ButtonHud';
 import { Callouts } from './Callouts';
 import { Captions } from './Captions';
 import { cameraAt } from './camera';
-import { TrackerScreen } from './TrackerScreen';
+import { ScreenOverlay, TrackerScreen } from './TrackerScreen';
 
 /** Is `file` in public/ right now? In Studio, re-checks whenever the public
  *  folder changes, so a freshly rendered WAV is picked up without a reload. */
@@ -51,7 +51,7 @@ const Fade: React.FC<{ frame: number; fadeIn: number; fadeOut: number; end: numb
   return opacity > 0 ? <AbsoluteFill style={{ background: 'black', opacity }} /> : null;
 };
 
-export const TrackerScene: React.FC<{ data: SceneData; chapter: string }> = ({ data, chapter }) => {
+export const TrackerScene: React.FC<{ data: SceneData; chapter: string; overlay?: ScreenOverlay }> = ({ data, chapter, overlay }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const scene = loadScene(data, { songVisibleRows: theme.views.song.visibleRows });
@@ -75,7 +75,7 @@ export const TrackerScene: React.FC<{ data: SceneData; chapter: string }> = ({ d
 
   return (
     <AbsoluteFill style={{ background: theme.stage.background }}>
-      <TrackerScreen grid={grid} camera={camera} theme={theme} />
+      <TrackerScreen grid={grid} camera={camera} theme={theme} overlay={overlay} />
       <div
         style={{
           position: 'absolute',
