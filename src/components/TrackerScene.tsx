@@ -2,8 +2,9 @@
 // captions, button HUD), callouts and the scene's audio. Every part is a
 // pure function of the frame and the scene's data.
 
-import React, { useMemo } from 'react';
-import { AbsoluteFill, Html5Audio, getInputProps, getRemotionEnvironment, getStaticFiles, interpolate, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
+import { getStaticFiles, watchPublicFolder } from '@remotion/studio';
+import React, { useEffect, useMemo, useReducer } from 'react';
+import { AbsoluteFill, Html5Audio, getInputProps, getRemotionEnvironment, interpolate, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import { playbackAt } from '../engine/playback';
 import { SceneData, loadScene } from '../engine/scene';
 import { CalloutEvent, CameraEvent, CaptionEvent, PressEvent } from '../engine/timeline';
@@ -15,11 +16,22 @@ import { Captions } from './Captions';
 import { cameraAt } from './camera';
 import { TrackerScreen } from './TrackerScreen';
 
+/** Is `file` in public/ right now? In Studio, re-checks whenever the public
+ *  folder changes, so a freshly rendered WAV is picked up without a reload. */
+function usePublicFile(file: string): boolean {
+  const [, recheck] = useReducer((n: number) => n + 1, 0);
+  useEffect(() => {
+    if (!getRemotionEnvironment().isStudio) return;
+    return watchPublicFolder(() => recheck()).cancel;
+  }, []);
+  return getStaticFiles().some((f) => f.name === file);
+}
+
 const SceneAudio: React.FC<{ file: string }> = ({ file }) => {
+  const exists = usePublicFile(file);
   // `--props='{"noAudio":true}'` renders silent previews and stills.
   if (getInputProps().noAudio) return null;
   const env = getRemotionEnvironment();
-  const exists = getStaticFiles().some((f) => f.name === file);
   if (!exists) {
     const msg = `Audio for this scene is out of date or missing (${file}). Run \`npm run audio\`, or use \`npm run dev\`, which re-renders it on every data change.`;
     if (env.isRendering) throw new Error(msg);

@@ -11,10 +11,12 @@
     "render": "remotion render",
     "check-sync": "tsx scripts/check-sync.ts",
     "test": "tsx --test test/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "node scripts/patch-remotion.cjs"
   },
   "dependencies": {
     "@remotion/cli": "4.0.531",
+    "@remotion/studio": "4.0.531",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "remotion": "4.0.531"

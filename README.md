@@ -22,7 +22,22 @@ npm run check-sync       # listens to the WAV and checks it against the picture
 - **No Chrome download?** (containers, CI) Point Remotion at a local one:
   `REMOTION_BROWSER_EXECUTABLE=/path/to/chrome npx remotion render`.
 - Studio shows two folders: **Chapters** (the manual) and **Tools**
-  (`ScreenGallery`: every built screen, for tweaking the theme by eye).
+  (`ScreenGallery`: every built screen, for tweaking the theme by eye). Tools
+  exist only in Studio, so with one chapter `npx remotion render` needs no
+  picker; once there are more, name one: `npx remotion render PhraseBasics`.
+
+### Remotion version: pinned to 4.0.531, with one file patched
+
+- **4.0.530 makes the MP4's audio 42.67 ms late** (AAC encoder priming
+  written into the file as sound). Remotion fixed it in 4.0.531.
+  `check-sync` catches it: "whole track late by 42.50 ms".
+- **4.0.531 shipped `@remotion/cli/dist/render-queue/queue.js` empty**, which
+  breaks Studio. `scripts/patch-remotion.cjs` runs after `npm install` and
+  writes a small stand-in, only if that file is empty. Studio works; its
+  built-in render queue is off (render from the terminal).
+- When upgrading Remotion, keep every `remotion` / `@remotion/*` package on
+  the same version and run `npm run check-sync` on the new MP4's audio
+  (see below). The patch script turns itself off once the file is real.
 
 ## How it works
 
@@ -57,8 +72,14 @@ doesn't exist: Studio shows a red banner and a render stops with an error.
 
 `npm run check-sync` measures the rendered audio itself (attacks, drum
 transients, and the pitch just before and after every legato note and ARP
-step) against the schedule, by playback rate. It passes on the WAV and on the
-audio pulled back out of the MP4, and fails on a copy shifted by 10 ms.
+step) against the schedule, by playback rate, plus a whole-track offset. It
+passes on the WAV and on the audio pulled back out of the MP4, and fails on a
+copy shifted by 10 ms. To check a finished MP4:
+
+```sh
+npx remotion ffmpeg -i out/PhraseBasics.mp4 -ac 2 -ar 48000 -c:a pcm_s16le out/mp4-audio.wav
+npm run check-sync -- phrase-basics --wav out/mp4-audio.wav
+```
 
 ## Layout
 

@@ -74,11 +74,11 @@ for (const data of SCENES) {
   const drumTimes = ons.filter((o) => o.type === 'DRUM').map((o) => o.f / fps);
   const nearDrum = (t0: number, t1: number) => drumTimes.some((d) => d > t0 - 0.12 && d < t1);
 
-  // Onset: the 0.25 ms step with the biggest rise within +-15 ms.
-  const onset = (t: number, sig: ArrayLike<number>) => {
+  // Onset: the 0.25 ms step with the biggest rise within +-`span` s of t.
+  const onset = (t: number, sig: ArrayLike<number>, span = 0.015) => {
     let best = -Infinity;
     let bestT = t;
-    for (let dt = -0.015; dt <= 0.015; dt += 0.00025) {
+    for (let dt = -span; dt <= span; dt += 0.00025) {
       const rise = rms(t + dt, t + dt + 0.0015, sig) - rms(t + dt - 0.0015, t + dt, sig);
       if (rise > best) {
         best = rise;
@@ -87,6 +87,9 @@ for (const data of SCENES) {
     }
     return bestT;
   };
+  // Wide-window drum errors: their median shows a whole-track shift (such as
+  // AAC encoder priming) that the +-15 ms per-hit search would only see as misses.
+  const wide: number[] = [];
 
   const pitchOf = (t0: number, t1: number) => detectPitch(mono, Math.round(t0 * sr), Math.round((t1 - t0) * sr), sr);
   const isNote = (hz: number, midi: number) => {
@@ -103,6 +106,7 @@ for (const data of SCENES) {
       const got = onset(t, diff);
       const err = (got - t) * 1000;
       note('drums', v.f, Math.abs(err) <= ATTACK_TOLERANCE_MS, err);
+      wide.push((onset(t, diff, 0.06) - t) * 1000);
       continue;
     }
     if (v.kind === 'on') {
@@ -139,6 +143,12 @@ for (const data of SCENES) {
   }
 
   console.log(`\n${data.id}  (${path.relative(root, file)})`);
+  if (wide.length) {
+    const median = wide.slice().sort((a, b) => a - b)[Math.floor(wide.length / 2)];
+    const ok = Math.abs(median) <= ATTACK_TOLERANCE_MS;
+    if (!ok) failed = true;
+    console.log(`  ${ok ? 'ok  ' : 'FAIL'} whole track            ${median >= 0 ? 'late' : 'early'} by ${Math.abs(median).toFixed(2)} ms (median over ${wide.length} drum hits)`);
+  }
   for (const [key, r] of [...results].sort()) {
     const ok = r.bad === 0;
     if (!ok) failed = true;
