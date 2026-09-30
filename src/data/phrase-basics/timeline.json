@@ -1,0 +1,55 @@
+{
+  "fps": 30,
+  "durationInFrames": 900,
+  "start": { "view": "PHRASE", "chain": "00", "phrase": "00", "cursor": { "row": 0, "col": "NOT" } },
+  "events": [
+    { "frame": 0, "caption": "A **phrase** is one channel's part: 16 steps, played top to bottom.", "title": "The Phrase screen", "until": 72 },
+    { "frame": 18, "callout": "phrase.title", "label": "PHRASE 00", "text": "Which phrase you are editing.", "until": 70 },
+
+    { "frame": 75, "caption": "Tap [A] on an empty step. You get a note, and the instrument too.", "title": "Enter notes", "until": 130 },
+    { "frame": 90, "press": "A" },
+    { "frame": 105, "press": "DOWN", "repeat": 4, "every": 3 },
+    { "frame": 122, "press": "A" },
+    { "frame": 132, "caption": "Hold [A] and press [RIGHT] or [LEFT] to move a note one semitone. [UP] or [DOWN]: one octave.", "title": "Change a note", "until": 250 },
+    { "frame": 140, "press": "A+RIGHT", "repeat": 3, "every": 5 },
+    { "frame": 162, "press": "DOWN", "repeat": 4, "every": 3 },
+    { "frame": 178, "press": "A" },
+    { "frame": 186, "press": "A+RIGHT", "repeat": 4, "every": 4 },
+    { "frame": 208, "press": "DOWN", "repeat": 4, "every": 3 },
+    { "frame": 224, "press": "A" },
+    { "frame": 234, "press": "A+DOWN" },
+
+    { "frame": 255, "camera": "phrase.grid", "ease": 24 },
+    { "frame": 258, "caption": "Rows 00 to 0F are the steps. Every fourth row is shaded: one beat.", "title": "Columns", "until": 432 },
+    { "frame": 282, "callout": "phrase.col.NOT", "label": "NOT", "text": "The note. OFF releases it; --- is empty.", "until": 324 },
+    { "frame": 318, "callout": "phrase.col.IN", "label": "IN", "text": "Instrument, 00 to 3F.", "until": 360 },
+    { "frame": 354, "callout": "phrase.fx1", "label": "FX1  P1", "text": "An effect command and its hex parameter.", "until": 396 },
+    { "frame": 390, "callout": "phrase.fx2", "label": "FX2  P2", "text": "A second effect lane. Both apply.", "until": 432 },
+
+    { "frame": 435, "caption": "Tap [A] in FX1 to add an effect, then hold [A] and press [LEFT] to pick the command.", "title": "Add an effect", "until": 556 },
+    { "frame": 440, "press": "UP", "repeat": 12, "every": 2 },
+    { "frame": 468, "press": "RIGHT", "repeat": 2, "every": 4 },
+    { "frame": 476, "camera": { "col": 3, "row": 5, "w": 15, "h": 6 }, "ease": 18 },
+    { "frame": 482, "press": "A" },
+    { "frame": 490, "press": "A+LEFT", "repeat": 8, "every": 3 },
+    { "frame": 518, "press": "RIGHT" },
+    { "frame": 524, "press": "A+UP", "repeat": 3, "every": 3 },
+    { "frame": 535, "press": "A+RIGHT", "repeat": 7, "every": 3 },
+    { "frame": 558, "caption": "Arpeggio: root, +3, +7 semitones, one step per tick. Here: C, D#, G.", "title": "ARP 37", "until": 596 },
+    { "frame": 560, "callout": "phrase.cell.00.FX1", "label": "ARP 37", "until": 596 },
+
+    { "frame": 590, "camera": "screen", "ease": 20 },
+    { "frame": 600, "rate": 0.25 },
+    { "frame": 600, "press": "SELECT+START" },
+    { "frame": 600, "caption": "[SELECT]+[START] loops the phrase. At **¼ speed**, every arp step is audible.", "title": "Playback", "until": 688 },
+    { "frame": 680, "rate": 1, "ramp": 30 },
+    { "frame": 690, "caption": "Back to full tempo: 120 BPM, four rows to a beat.", "title": "Full tempo", "until": 776 },
+    { "frame": 770, "press": "START" },
+
+    { "frame": 780, "press": "L" },
+    { "frame": 780, "caption": "[L] backs out to the **chain**: its phrases play in order, top to bottom.", "title": "The Chain screen" },
+    { "frame": 796, "callout": "chain.col.PHRASE", "label": "PH", "text": "Phrase number.", "until": 850 },
+    { "frame": 805, "press": "START" },
+    { "frame": 822, "callout": "chain.col.TRANSPOSE", "label": "TR", "text": "Transpose. 05 plays phrase 00 up five semitones.", "until": 896 }
+  ]
+}

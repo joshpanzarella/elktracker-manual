@@ -1,0 +1,67 @@
+{
+  "project": { "name": "BASICS", "bpm": 120, "speed": 6, "swing": 0, "root": "C", "scale": "OFF" },
+
+  "song": {
+    "00": "00 01 -- -- -- -- -- --"
+  },
+
+  "chains": {
+    "00": { "name": "LEAD", "slots": ["00", "01", "00 +5", "01"] },
+    "01": { "name": "BEAT", "slots": ["02"] }
+  },
+
+  "phrases": {
+    "00": { "name": "", "steps": [] },
+    "01": {
+      "name": "ANSWER",
+      "steps": [
+        "G-3 00", "", "", "",
+        "A#3 00", "", "", "",
+        "D-4 00", "", "", "",
+        "F-4 00", "", "", ""
+      ]
+    },
+    "02": {
+      "name": "GROOVE",
+      "steps": [
+        "C-4 01", "", "E-4 01", "",
+        "D-4 01", "", "E-4 01", "",
+        "C-4 01", "", "E-4 01", "C-4 01",
+        "D-4 01", "", "F-4 01", ""
+      ]
+    }
+  },
+
+  "instruments": {
+    "00": {
+      "name": "LEAD",
+      "type": "SUB",
+      "volume": "B0",
+      "pan": "80",
+      "cutoff": "A8",
+      "res": "50",
+      "env": { "a": "00", "d": "48", "s": "90", "r": "30" },
+      "osc": [
+        { "wave": "SAW", "semi": 0, "fine": 0, "level": "FF" },
+        { "wave": "SQR", "semi": -12, "fine": 0, "level": "70" },
+        { "wave": "OFF" }
+      ]
+    },
+    "01": {
+      "name": "KIT",
+      "type": "DRUM",
+      "volume": "E0",
+      "pan": "80",
+      "pads": [
+        { "sample": "synth:kick", "choke": 0 },
+        { "sample": "", "choke": 0 },
+        { "sample": "synth:snare", "choke": 0 },
+        { "sample": "synth:clap", "choke": 0 },
+        { "sample": "synth:hat", "choke": 1 },
+        { "sample": "synth:openhat", "choke": 1 },
+        { "sample": "synth:tom", "choke": 0 },
+        { "sample": "synth:rim", "choke": 0 }
+      ]
+    }
+  }
+}

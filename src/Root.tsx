@@ -1,12 +1,17 @@
 import React from 'react';
-import { AbsoluteFill, Composition } from 'remotion';
-
-const Placeholder: React.FC = () => (
-  <AbsoluteFill style={{ background: '#101014', color: '#e8e8f0', fontSize: 64, justifyContent: 'center', alignItems: 'center' }}>
-    ElkTracker visual manual
-  </AbsoluteFill>
-);
+import { Composition } from 'remotion';
+import { PhraseBasics, phraseBasics } from './scenes/PhraseBasics';
+import { theme } from './theme';
 
 export const RemotionRoot: React.FC = () => (
-  <Composition id="Placeholder" component={Placeholder} durationInFrames={30} fps={30} width={1920} height={1080} />
+  <>
+    <Composition
+      id="PhraseBasics"
+      component={PhraseBasics}
+      durationInFrames={phraseBasics.timeline.durationInFrames}
+      fps={phraseBasics.timeline.fps}
+      width={theme.stage.width}
+      height={theme.stage.height}
+    />
+  </>
 );
